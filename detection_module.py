@@ -85,10 +85,6 @@ class YOLODetector:
                 if label.lower() in counts:
                     counts[label] += 1
 
-        total_count = sum(counts.values())
-        if total_count > 0:  # Only print if there is at least one detection
-            print(", ".join([f"{key}: {value}" for key, value in counts.items() if value > 0]),
-                  f", Total count: {total_count}")
         return counts
 
 
@@ -104,4 +100,8 @@ class DetectionMonitor:
 
         # Only print the counts if there's a change
         if self.previous_counts != current_counts:
+            total_count = sum(current_counts.values())
+            if total_count > 0:  # Only print if there is at least one detection
+                print(", ".join([f"{key}: {value}" for key, value in current_counts.items() if value > 0]),
+                      f", Total count: {total_count}")
             self.previous_counts = current_counts
