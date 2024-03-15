@@ -4,6 +4,8 @@ import os
 import cv2
 import numpy as np
 
+from kafka.kafka_module import KafkaMessage, KafkaPublisher
+
 
 class YOLODetector:
     MIN_CONFIDENCE = 0.4
@@ -98,10 +100,21 @@ class DetectionMonitor:
         boxes, confidences, class_ids = self.detector.process_detections(frame, layer_outputs)
         current_counts = self.detector.draw_boxes(frame, boxes, confidences, class_ids)
 
-        # Only print the counts if there's a change
+        # Only send the counts if there's a change
         if self.previous_counts != current_counts:
             total_count = sum(current_counts.values())
-            if total_count > 0:  # Only print if there is at least one detection
+            if total_count > 0:
+
+                message = KafkaMessage(current_counts['car'],
+                                       current_counts['truck'],
+                                       current_counts['bus'],
+                                       current_counts['motorbike'],
+                                       "2024-03-15T12:00:00Z",
+                                       11642267369)
+                bootstrap_server = '100.117.70.32:9094'
+                publisher = KafkaPublisher(bootstrap_server, message)
+                publisher.publish()
+
                 print(", ".join([f"{key}: {value}" for key, value in current_counts.items() if value > 0]),
                       f", Total count: {total_count}")
             self.previous_counts = current_counts
