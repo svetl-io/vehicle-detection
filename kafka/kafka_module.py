@@ -1,10 +1,12 @@
+# kafka/kafka_module.py
+
 import json
 from datetime import datetime
 
 from confluent_kafka import Producer
 from confluent_kafka.admin import AdminClient, NewTopic
 
-from kafka.constants import BOOTSTRAP_SERVER
+from kafka.constants import BOOTSTRAP_SERVER, TOPIC_NAME
 
 
 class KafkaMessage:
@@ -23,7 +25,7 @@ class KafkaMessage:
         self.traffic_light_id = traffic_light_id
 
     def to_json(self):
-        return json.dumps(self.__dict__)
+        return json.dumps(self.__dict__, default=str)
 
 
 class KafkaPublisher:
@@ -31,7 +33,7 @@ class KafkaPublisher:
         self.bootstrap_servers = bootstrap_servers
 
         self.message = kafka_message.to_json()
-        self.topic_name = str(kafka_message.traffic_light_id)
+        self.topic_name = TOPIC_NAME  # str(kafka_message.traffic_light_id)
 
         self.admin_client = AdminClient({'bootstrap.servers': self.bootstrap_servers})
         self.producer = Producer({'bootstrap.servers': self.bootstrap_servers})

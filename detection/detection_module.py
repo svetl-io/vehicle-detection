@@ -1,20 +1,16 @@
-# detection_module.py
+# detection/detection_module.py
+
 import os
 
 import cv2
 import numpy as np
 
+from detection.constants import (INTERESTED_CLASS_IDS, MIN_CONFIDENCE,
+                                 NMS_THRESHOLD, INPUT_HEIGHT, INPUT_WIDTH)
 from kafka.kafka_module import KafkaMessage, KafkaPublisher
 
 
 class YOLODetector:
-    MIN_CONFIDENCE = 0.4
-    NMS_THRESHOLD = 0.2
-    INPUT_WIDTH = 416
-    INPUT_HEIGHT = 416
-    FRAME_RESCALE_FACTOR = 0.7
-    INTERESTED_CLASS_IDS = {0: 'person', 1: 'bicycle', 2: 'car', 3: 'motorbike', 5: 'bus', 7: 'truck'}
-
     def __init__(self, model_base_path):
         self.model_base_path = model_base_path
         self.labels, self.colors, self.net, self.unconnected_layers = self.load_model_and_labels()
@@ -37,7 +33,7 @@ class YOLODetector:
         return labels_list, colors_list, read_net, unconnected_out_layers
 
     def detect_objects(self, frame):
-        blob = cv2.dnn.blobFromImage(frame, 1 / 255.0, (YOLODetector.INPUT_WIDTH, YOLODetector.INPUT_HEIGHT),
+        blob = cv2.dnn.blobFromImage(frame, 1 / 255.0, (INPUT_WIDTH, INPUT_HEIGHT),
                                      swapRB=True, crop=False)
         self.net.setInput(blob)
         layer_output = self.net.forward(self.unconnected_layers)
@@ -54,7 +50,7 @@ class YOLODetector:
                 class_id = np.argmax(scores)
                 confidence = scores[class_id]
 
-                if class_id in YOLODetector.INTERESTED_CLASS_IDS and confidence > YOLODetector.MIN_CONFIDENCE:
+                if class_id in INTERESTED_CLASS_IDS and confidence > MIN_CONFIDENCE:
                     box = detection[0:4] * np.array([W, H, W, H])
                     centerX, centerY, box_width, box_height = box.astype("int")
 
@@ -68,8 +64,8 @@ class YOLODetector:
         return boxes, confidences, class_ids
 
     def draw_boxes(self, frame, boxes, confidences, class_ids):
-        idxs = cv2.dnn.NMSBoxes(boxes, confidences, YOLODetector.MIN_CONFIDENCE, YOLODetector.NMS_THRESHOLD)
-        counts = {label: 0 for label in YOLODetector.INTERESTED_CLASS_IDS.values()}
+        idxs = cv2.dnn.NMSBoxes(boxes, confidences, MIN_CONFIDENCE, NMS_THRESHOLD)
+        counts = {label: 0 for label in INTERESTED_CLASS_IDS.values()}
 
         if len(idxs) > 0:
             for i in idxs.flatten():
@@ -104,7 +100,6 @@ class DetectionMonitor:
         if self.previous_counts != current_counts:
             total_count = sum(current_counts.values())
             if total_count > 0:
-
                 message = KafkaMessage(current_counts['car'],
                                        current_counts['truck'],
                                        current_counts['bus'],

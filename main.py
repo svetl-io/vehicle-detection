@@ -1,13 +1,13 @@
 # main.py
+
 import sys
 import time
 
 import cv2
 from imutils.video import VideoStream, FPS
 
-from detection_module import YOLODetector, DetectionMonitor
-
-MODEL_BASE_PATH = "yolo-rtmp"
+from detection.constants import FRAME_RESCALE_FACTOR, MODEL_BASE_PATH
+from detection.detection_module import YOLODetector, DetectionMonitor
 
 if __name__ == "__main__":
     streaming_path = sys.argv[1]
@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     while True:
         frame = vs.read()
-        frame = cv2.resize(frame, None, fx=YOLODetector.FRAME_RESCALE_FACTOR, fy=YOLODetector.FRAME_RESCALE_FACTOR)
+        frame = cv2.resize(frame, None, fx=FRAME_RESCALE_FACTOR, fy=FRAME_RESCALE_FACTOR)
 
         monitor.update_and_draw(frame)
 
